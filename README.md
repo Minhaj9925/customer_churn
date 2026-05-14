@@ -1,173 +1,155 @@
-# ChurnSense — Customer Churn Prediction App
-### Full-Stack ML Web Application · Flask + Vanilla HTML/CSS/JS
+# 🔄 Customer Churn Prediction System
+
+A Machine Learning-powered web application that predicts whether a customer is likely to churn or stay — with real-time risk categorization and an intuitive web interface.
 
 ---
 
-## 📁 Folder Structure
+## 📌 Overview
+
+Customer churn is one of the most critical challenges for businesses. This project uses a trained Machine Learning model integrated with a Flask backend to predict churn risk based on customer data. The system categorizes each prediction into actionable risk levels, helping businesses proactively retain customers before they leave.
+
+---
+
+## ✨ Features
+
+- **Real-time churn prediction** — instant results powered by a trained ML model
+- **Risk categorization** — customers are classified as:
+  - 🔴 High Risk
+  - 🟡 Medium Risk
+  - 🟢 Likely to Stay
+- **Interactive web interface** — clean, responsive frontend built with HTML, CSS, and JavaScript
+- **Imbalanced data handling** — uses SMOTE to improve prediction on minority class (churners)
+- **Flask REST backend** — lightweight API serving predictions on demand
+
+---
+
+## 🛠️ Technologies Used
+
+| Layer | Technology |
+|---|---|
+| Backend | Python, Flask |
+| Machine Learning | Scikit-learn, Pandas, NumPy |
+| Data Balancing | imbalanced-learn (SMOTE) |
+| Frontend | HTML, CSS, JavaScript |
+| Model Storage | Pickle (`.pkl`) |
+
+---
+
+## 📁 Project Structure
 
 ```
 churn_app/
-├── app.py                 ← Flask backend (REST API)
-├── requirements.txt       ← Python dependencies
-├── churn_model.pkl        ← YOUR model (copy here, or set path)
-└── frontend/
-    └── index.html         ← Beautiful prediction UI
+│
+├── frontend/
+│   └── index.html          # Main UI for prediction input & results
+│
+├── app.py                  # Flask app — API routes & model inference
+├── churn_model.pkl         # Trained & serialized ML model
+├── requirements.txt        # Python dependencies
+└── README.md
 ```
 
 ---
 
-## ⚙️ STEP 1 — Set Up Python Environment
+## 🤖 Machine Learning Workflow
 
-Open a terminal (Command Prompt or PowerShell on Windows):
+```
+Raw Data
+   │
+   ▼
+Data Preprocessing        ← Handle missing values, encode categoricals
+   │
+   ▼
+Feature Engineering       ← Select & transform relevant features
+   │
+   ▼
+SMOTE Oversampling         ← Balance imbalanced classes
+   │
+   ▼
+Model Training             ← Train classifier with Scikit-learn
+   │
+   ▼
+Evaluation                 ← Accuracy, Recall, Confusion Matrix
+   │
+   ▼
+Serialization              ← Save model as churn_model.pkl
+   │
+   ▼
+Flask Deployment           ← Serve predictions via REST API
+```
+
+---
+
+## 📊 Model Performance
+
+| Metric | Score |
+|---|---|
+| Accuracy | **80%** |
+| Recall (Churn class) | **81%** |
+
+> **Why Recall matters here:** In churn prediction, missing an actual churner (false negative) is more costly than a false alarm. The model is optimized for high recall to catch at-risk customers.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.8+
+- pip
+
+### Installation
 
 ```bash
-# Navigate to the app folder
-cd C:\path\to\churn_app
+# 1. Clone the repository
+git clone https://github.com/your-username/churn_app.git
+cd churn_app
 
-# (Optional but recommended) Create a virtual environment
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Mac/Linux
-
-# Install dependencies
+# 2. Install dependencies
 pip install -r requirements.txt
-```
 
----
-
-## 📦 STEP 2 — Place Your Model
-
-**Option A** (recommended): Copy your model file into the `churn_app/` folder:
-```
-C:\Users\inhaj\churn_model.pkl  →  churn_app\churn_model.pkl
-```
-Then edit `app.py` line 12:
-```python
-MODEL_PATH = os.environ.get("MODEL_PATH", "churn_model.pkl")
-```
-
-**Option B**: Keep the model at its original path. The default path in `app.py` is already set to:
-```
-C:\Users\inhaj\churn_model.pkl
-```
-No changes needed if you're running as the `inhaj` user.
-
-**Option C**: Set an environment variable before running:
-```bash
-set MODEL_PATH=C:\Users\inhaj\churn_model.pkl   # Windows CMD
-$env:MODEL_PATH="C:\Users\inhaj\churn_model.pkl" # PowerShell
-```
-
----
-
-## 🚀 STEP 3 — Run the Flask Backend
-
-```bash
+# 3. Run the Flask app
 python app.py
 ```
 
-You should see:
-```
-✅ Model loaded from: C:\Users\inhaj\churn_model.pkl
- * Running on http://127.0.0.1:5000
-```
+### Usage
 
-If you see `❌ Model not found`, re-check STEP 2.
+1. Open your browser and go to `http://127.0.0.1:5000`
+2. Enter the customer details in the form
+3. Click **Predict** to get an instant churn risk result
 
 ---
 
-## 🌐 STEP 4 — Open the Frontend
+## 📦 Requirements
 
-Open your browser and go to:
+Key dependencies (see `requirements.txt` for full list):
+
 ```
-http://127.0.0.1:5000
-```
-
-The Flask server automatically serves the `frontend/index.html` file.
-
----
-
-## 🔌 API Reference
-
-### `POST /api/predict`
-Send a JSON body with all 6 features:
-```json
-{
-  "DayMins":         245.5,
-  "MonthlyCharge":   65.40,
-  "CustServCalls":   3,
-  "OverageFee":      12.80,
-  "RoamMins":        14.2,
-  "ContractRenewal": 0
-}
-```
-
-**Response:**
-```json
-{
-  "prediction":  1,
-  "label":       "CHURN",
-  "churn_prob":  78.3,
-  "stay_prob":   21.7,
-  "risk":        "High Risk",
-  "features":    { "DayMins": 245.5, ... }
-}
-```
-- `prediction`: `1` = Churn, `0` = Stay
-- `risk`: `"High Risk"` (≥70%), `"Medium Risk"` (40–69%), `"Low Risk"` (<40%)
-
-### `GET /api/health`
-Check server + model status:
-```json
-{ "status": "ok", "model_loaded": true, "model_path": "..." }
+flask
+scikit-learn
+pandas
+numpy
+imbalanced-learn
 ```
 
 ---
 
-## 🧪 Test Without the UI (curl / Postman)
+## 🔮 Future Improvements
 
-```bash
-curl -X POST http://127.0.0.1:5000/api/predict \
-  -H "Content-Type: application/json" \
-  -d "{\"DayMins\":300,\"MonthlyCharge\":80,\"CustServCalls\":5,\"OverageFee\":15,\"RoamMins\":20,\"ContractRenewal\":0}"
-```
-
----
-
-## 🛠️ Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `ModuleNotFoundError: flask` | Run `pip install -r requirements.txt` |
-| `❌ Model not found` | Check MODEL_PATH in app.py or set env variable |
-| `Cannot reach server` in UI | Make sure `python app.py` is running |
-| `AttributeError: predict_proba` | Your model doesn't support probabilities; prediction still works |
-| CORS error in browser | Already handled via `flask-cors` |
+- [ ] Add model retraining pipeline with new data
+- [ ] Include SHAP-based feature importance explanations
+- [ ] Add database integration for storing prediction history
+- [ ] Deploy on cloud (AWS / Heroku / Render)
+- [ ] Add user authentication for multi-user access
 
 ---
 
-## 🔮 Feature Reference
+## 🤝 Contributing
 
-| Feature | Type | Description |
-|---|---|---|
-| `DayMins` | float | Total daytime minutes used |
-| `MonthlyCharge` | float | Customer's monthly bill ($) |
-| `CustServCalls` | int | Number of customer service calls |
-| `OverageFee` | float | Charges beyond the plan limit ($) |
-| `RoamMins` | float | Minutes used while roaming |
-| `ContractRenewal` | 0 or 1 | Whether customer renewed contract |
+Contributions are welcome! Feel free to open an issue or submit a pull request.
 
 ---
 
-## 🚢 Deploy to Production (optional)
+## 📄 License
 
-Use **Gunicorn** (Linux/Mac) instead of Flask's dev server:
-```bash
-pip install gunicorn
-gunicorn app:app --bind 0.0.0.0:5000 --workers 4
-```
-
-Or deploy to **Render / Railway / Heroku** by adding a `Procfile`:
-```
-web: gunicorn app:app
-```
+This project is open-source and available under the [MIT License](LICENSE).
