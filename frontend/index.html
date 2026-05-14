@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ChurnSense AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ━━━ RESET ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ━━━ TOKENS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root {
+  --bg:         #05070d;
+  --bg2:        #080b13;
+  --panel:      #0d1120;
+  --card:       #111827;
+  --card2:      #151d2e;
+  --line:       #1c2640;
+  --line2:      #243050;
+  --lime:       #c6ff50;
+  --lime-dim:   #8db838;
+  --cyan:       #38d9f5;
+  --red:        #ff3d5a;
+  --amber:      #ffb020;
+  --green:      #36f0a0;
+  --text:       #dce6ff;
+  --text2:      #7b8fb8;
+  --text3:      #3d5070;
+  --fh:         'Cabinet Grotesk', sans-serif;
+  --fm:         'JetBrains Mono', monospace;
+  --r:          12px;
+  --r2:         18px;
+}
+
+/* ━━━ BASE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fm);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* animated mesh background */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 0%,  rgba(198,255,80,.06)  0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 90% 100%, rgba(56,217,245,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 50% 50%,  rgba(255,61,90,.03)  0%, transparent 70%);
+}
+
+/* fine grid */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ━━━ SCROLLBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 3px; }
+
+/* ━━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+header {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2.5rem;
+  height: 60px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(5,7,13,.85);
+  backdrop-filter: blur(20px);
+}
+
+.logo-wrap { display: flex; align-items: center; gap: .6rem; }
+.logo-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--lime);
+  display: grid; place-items: center;
+  font-size: .9rem; line-height: 1;
+}
+.logo-text {
+  font-family: var(--fh);
+  font-size: 1.1rem; font-weight: 900;
+  letter-spacing: -.03em; color: var(--text);
+}
+.logo-text span { color: var(--lime); }
+
+.badge-live {
+  display: flex; align-items: center; gap: .4rem;
+  background: rgba(54,240,160,.08);
+  border: 1px solid rgba(54,240,160,.2);
+  padding: .25rem .7rem; border-radius: 20px;
+  font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--green);
+}
+.badge-live .pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 6px var(--green);
+  animation: blink 2s ease-in-out infinite;
+}
+.badge-live.offline { color: var(--red); background: rgba(255,61,90,.08); border-color: rgba(255,61,90,.2); }
+.badge-live.offline .pulse { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ━━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.hero {
+  position: relative; z-index: 1;
+  padding: 4rem 2.5rem 2.5rem;
+  max-width: 860px;
+}
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(198,255,80,.07);
+  border: 1px solid rgba(198,255,80,.2);
+  color: var(--lime);
+  font-size: .65rem; letter-spacing: .14em; text-transform: uppercase;
+  padding: .3rem .8rem; border-radius: 20px;
+  margin-bottom: 1.4rem;
+}
+.hero h1 {
+  font-family: var(--fh);
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  font-weight: 900; line-height: 1.0; letter-spacing: -.04em;
+  color: var(--text);
+}
+.hero h1 .hl { color: var(--lime); }
+.hero p {
+  margin-top: 1rem; max-width: 480px;
+  color: var(--text2); font-size: .82rem; line-height: 1.75;
+}
+
+/* ━━━ TABS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.tabs-bar {
+  position: relative; z-index: 1;
+  display: flex; gap: .25rem;
+  padding: 0 2.5rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0;
+}
+.tab-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--fm); font-size: .75rem; font-weight: 500;
+  color: var(--text3); letter-spacing: .06em; text-transform: uppercase;
+  padding: .9rem 1.4rem;
+  border-bottom: 2px solid transparent;
+  transition: color .2s, border-color .2s;
+  position: relative; top: 1px;
+}
+.tab-btn:hover { color: var(--text2); }
+.tab-btn.active { color: var(--lime); border-bottom-color: var(--lime); }
+
+/* ━━━ CONTENT SECTIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.tab-section { display: none; }
+.tab-section.active { display: block; }
+
+/* ━━━ SINGLE PREDICT LAYOUT ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.single-layout {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1200px;
+}
+
+/* ━━━ CARD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  padding: 1.8rem 2rem;
+  position: relative; overflow: hidden;
+}
+.card::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(198,255,80,.3), transparent);
+}
+
+.section-label {
+  font-size: .6rem; font-weight: 500;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 1.6rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.section-label::before {
+  content: ''; display: block;
+  width: 14px; height: 1px; background: var(--lime); opacity: .6;
+}
+
+/* ━━━ INPUT GRID ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.input-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+
+.field { display: flex; flex-direction: column; gap: .45rem; }
+
+.field label {
+  font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text2); display: flex; align-items: center; gap: .4rem;
+}
+.field label .unit {
+  background: rgba(198,255,80,.1);
+  color: var(--lime); font-size: .55rem;
+  padding: .1rem .35rem; border-radius: 3px; letter-spacing: .08em;
+}
+
+input[type="number"] {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: var(--text); font-family: var(--fm); font-size: .9rem;
+  padding: .72rem 1rem; outline: none; width: 100%;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button { display: none; }
+input[type="number"]:focus {
+  border-color: rgba(198,255,80,.5);
+  background: rgba(198,255,80,.03);
+  box-shadow: 0 0 0 3px rgba(198,255,80,.08);
+}
+input[type="number"].error { border-color: rgba(255,61,90,.5); }
+
+.hint { font-size: .62rem; color: var(--text3); }
+
+/* ━━━ TOGGLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: var(--r); padding: .72rem 1rem;
+  cursor: pointer; transition: border-color .2s;
+  user-select: none;
+}
+.toggle-row:hover { border-color: rgba(198,255,80,.3); }
+.toggle-row-label { font-size: .82rem; color: var(--text2); }
+.toggle-pill {
+  width: 40px; height: 22px; border-radius: 11px;
+  background: var(--line2); position: relative;
+  transition: background .2s; flex-shrink: 0;
+}
+.toggle-pill::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text3); transition: transform .22s, background .22s;
+}
+.toggle-row.on .toggle-pill { background: rgba(198,255,80,.25); }
+.toggle-row.on .toggle-pill::after { transform: translateX(18px); background: var(--lime); }
+.toggle-row.on .toggle-row-label { color: var(--text); }
+
+/* ━━━ PREDICT BUTTON ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.btn-predict {
+  margin-top: 1.6rem; width: 100%;
+  background: var(--lime); color: #080b0e;
+  border: none; border-radius: var(--r);
+  font-family: var(--fh); font-size: 1rem; font-weight: 800;
+  letter-spacing: -.01em; padding: .88rem 2rem;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: transform .15s, box-shadow .2s, filter .15s;
+}
+.btn-predict::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.18), transparent);
+}
+.btn-predict:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(198,255,80,.25); filter: brightness(1.06); }
+.btn-predict:active { transform: translateY(0); }
+.btn-predict:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-predict .spin {
+  display: none; width: 18px; height: 18px; margin: 0 auto;
+  border: 2px solid rgba(0,0,0,.2); border-top-color: #000;
+  border-radius: 50%; animation: rot .6s linear infinite;
+}
+.btn-predict.loading .btn-text { display: none; }
+.btn-predict.loading .spin { display: block; }
+@keyframes rot { to { transform: rotate(360deg); } }
+
+/* ━━━ RESULT PANEL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.result-col { display: flex; flex-direction: column; gap: 1.2rem; position: sticky; top: 80px; align-self: start; }
+
+/* verdict */
+.verdict-card {
+  border-radius: var(--r2); padding: 2.2rem 1.8rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  position: relative; overflow: hidden;
+  min-height: 190px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: .5rem;
+  transition: border-color .4s;
+}
+.verdict-card .glow {
+  position: absolute; inset: -60px; border-radius: 50%;
+  filter: blur(70px); pointer-events: none; opacity: 0; transition: opacity .5s;
+}
+.verdict-card.churn { border-color: rgba(255,61,90,.3); }
+.verdict-card.churn .glow { background: var(--red); opacity: .09; }
+.verdict-card.stay  { border-color: rgba(54,240,160,.3); }
+.verdict-card.stay  .glow { background: var(--green); opacity: .09; }
+
+.v-emoji { font-size: 2.8rem; line-height: 1; }
+.v-label {
+  font-family: var(--fh); font-size: 2rem; font-weight: 900; letter-spacing: -.04em;
+}
+.verdict-card.churn .v-label { color: var(--red); }
+.verdict-card.stay  .v-label { color: var(--green); }
+.v-chip {
+  font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
+  padding: .25rem .8rem; border-radius: 20px; font-weight: 500;
+}
+.verdict-card.churn .v-chip { background: rgba(255,61,90,.12); color: var(--red); }
+.verdict-card.stay  .v-chip { background: rgba(54,240,160,.12); color: var(--green); }
+
+/* empty */
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: .6rem; color: var(--text3); }
+.empty-icon { font-size: 2.2rem; opacity: .3; }
+.empty-state p { font-size: .75rem; line-height: 1.7; text-align: center; }
+
+/* prob bars */
+.prob-section { padding: 1.5rem 1.8rem; }
+.prob-row { margin-bottom: .9rem; }
+.prob-head { display: flex; justify-content: space-between; font-size: .72rem; margin-bottom: .3rem; }
+.prob-track { height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+.prob-fill {
+  height: 100%; border-radius: 3px; width: 0%;
+  transition: width .9s cubic-bezier(.16,1,.3,1);
+}
+.prob-fill.c { background: linear-gradient(90deg, var(--red), #ff8096); }
+.prob-fill.s { background: linear-gradient(90deg, var(--green), #96ffe0); }
+
+/* feature echo */
+.feat-list { font-size: .75rem; }
+.feat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .45rem 0; border-bottom: 1px solid var(--line);
+}
+.feat-row:last-child { border-bottom: none; }
+.feat-k { color: var(--text2); }
+.feat-v { color: var(--text); font-weight: 500; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CSV SECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.csv-layout {
+  position: relative; z-index: 1;
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1200px;
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+
+/* drop zone */
+.dropzone {
+  border: 2px dashed var(--line2);
+  border-radius: var(--r2);
+  background: var(--card);
+  padding: 3.5rem 2rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  cursor: pointer; transition: border-color .2s, background .2s;
+  position: relative; text-align: center;
+}
+.dropzone:hover, .dropzone.over {
+  border-color: rgba(198,255,80,.5);
+  background: rgba(198,255,80,.03);
+}
+.dz-icon { font-size: 2.8rem; opacity: .6; line-height: 1; }
+.dz-title { font-family: var(--fh); font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; }
+.dz-sub { font-size: .75rem; color: var(--text2); line-height: 1.6; }
+.dz-sub span { color: var(--lime); }
+.dz-hidden { display: none; }
+
+/* selected file pill */
+.file-pill {
+  display: none;
+  align-items: center; gap: .7rem;
+  background: rgba(198,255,80,.08);
+  border: 1px solid rgba(198,255,80,.25);
+  border-radius: var(--r); padding: .6rem 1rem;
+  font-size: .78rem; color: var(--lime);
+}
+.file-pill.show { display: flex; }
+.file-pill-name { flex: 1; }
+.file-pill-remove {
+  background: none; border: none; color: var(--text2);
+  cursor: pointer; font-size: 1rem; line-height: 1;
+  transition: color .15s;
+}
+.file-pill-remove:hover { color: var(--red); }
+
+/* run csv button */
+.btn-csv {
+  align-self: flex-start;
+  background: var(--lime); color: #080b0e;
+  border: none; border-radius: var(--r);
+  font-family: var(--fh); font-size: .95rem; font-weight: 800;
+  padding: .78rem 2.2rem; cursor: pointer;
+  transition: transform .15s, box-shadow .2s, filter .15s;
+  display: flex; align-items: center; gap: .6rem;
+}
+.btn-csv:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(198,255,80,.22); filter: brightness(1.06); }
+.btn-csv:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.btn-csv .spin {
+  display: none; width: 16px; height: 16px;
+  border: 2px solid rgba(0,0,0,.2); border-top-color: #000;
+  border-radius: 50%; animation: rot .6s linear infinite;
+}
+.btn-csv.loading .btn-label { display: none; }
+.btn-csv.loading .spin { display: block; }
+
+/* stats row */
+.stats-row {
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.stats-row.show { display: grid; }
+
+.stat-box {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r2); padding: 1.4rem 1.6rem;
+  position: relative; overflow: hidden;
+}
+.stat-box::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: var(--accent-line, transparent);
+}
+.stat-box.lime  { --accent-line: linear-gradient(90deg, transparent, rgba(198,255,80,.4), transparent); }
+.stat-box.red   { --accent-line: linear-gradient(90deg, transparent, rgba(255,61,90,.4),  transparent); }
+.stat-box.green { --accent-line: linear-gradient(90deg, transparent, rgba(54,240,160,.4), transparent); }
+.stat-box.cyan  { --accent-line: linear-gradient(90deg, transparent, rgba(56,217,245,.4), transparent); }
+
+.stat-label {
+  font-size: .58rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: .6rem;
+}
+.stat-value {
+  font-family: var(--fh); font-size: 2.2rem; font-weight: 900;
+  letter-spacing: -.04em; line-height: 1;
+}
+.stat-box.lime  .stat-value { color: var(--lime); }
+.stat-box.red   .stat-value { color: var(--red); }
+.stat-box.green .stat-value { color: var(--green); }
+.stat-box.cyan  .stat-value { color: var(--cyan); }
+.stat-sub { font-size: .65rem; color: var(--text3); margin-top: .35rem; }
+
+/* risk mini-chart */
+.risk-bars { display: flex; gap: .3rem; margin-top: .8rem; align-items: flex-end; height: 28px; }
+.risk-bar-item {
+  flex: 1; border-radius: 3px 3px 0 0;
+  transition: height .8s cubic-bezier(.16,1,.3,1);
+}
+.rb-high { background: var(--red); }
+.rb-mid  { background: var(--amber); }
+.rb-low  { background: var(--green); }
+
+/* results table */
+.table-wrap {
+  display: none; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--r2);
+  overflow: hidden;
+}
+.table-wrap.show { display: block; }
+
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 1.8rem;
+  border-bottom: 1px solid var(--line);
+}
+.table-title { font-family: var(--fh); font-size: 1rem; font-weight: 800; letter-spacing: -.02em; }
+.table-count { font-size: .7rem; color: var(--text2); }
+
+.btn-export {
+  background: rgba(198,255,80,.1); border: 1px solid rgba(198,255,80,.25);
+  color: var(--lime); font-family: var(--fm); font-size: .7rem;
+  padding: .4rem .9rem; border-radius: 6px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-export:hover { background: rgba(198,255,80,.18); }
+
+.tbl-scroll { overflow-x: auto; max-height: 480px; overflow-y: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: .72rem; }
+thead th {
+  position: sticky; top: 0;
+  background: var(--card2); color: var(--text3);
+  font-size: .58rem; letter-spacing: .12em; text-transform: uppercase;
+  font-weight: 500; padding: .75rem 1rem; text-align: left;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+tbody td {
+  padding: .65rem 1rem; border-bottom: 1px solid rgba(28,38,64,.5);
+  white-space: nowrap; color: var(--text);
+}
+tbody tr:last-child td { border-bottom: none; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .6rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  padding: .22rem .65rem; border-radius: 4px;
+}
+.badge.churn { background: rgba(255,61,90,.12); color: var(--red); }
+.badge.stay  { background: rgba(54,240,160,.12); color: var(--green); }
+.badge.high  { background: rgba(255,61,90,.1);  color: var(--red); }
+.badge.med   { background: rgba(255,176,32,.1);  color: var(--amber); }
+.badge.low   { background: rgba(54,240,160,.1); color: var(--green); }
+
+.mini-bar-wrap { display: flex; align-items: center; gap: .5rem; }
+.mini-bar-bg { flex: 1; height: 4px; background: var(--bg2); border-radius: 2px; min-width: 50px; }
+.mini-bar-fill { height: 100%; border-radius: 2px; transition: width .6s; }
+.mini-bar-fill.c { background: var(--red); }
+.mini-bar-fill.s { background: var(--green); }
+
+/* col widths */
+.col-row { width: 50px; }
+.col-num { width: 90px; }
+.col-label { width: 80px; }
+.col-prob  { width: 140px; }
+.col-risk  { width: 100px; }
+
+/* ━━━ TOAST ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#toast {
+  position: fixed; bottom: 2rem; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: rgba(20,26,40,.95); border: 1px solid var(--line2);
+  color: var(--text); padding: .7rem 1.4rem; border-radius: 10px;
+  font-size: .78rem; z-index: 9999; pointer-events: none;
+  transition: transform .3s cubic-bezier(.16,1,.3,1);
+  display: flex; align-items: center; gap: .5rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.err  { border-color: rgba(255,61,90,.3); color: var(--red); }
+
+/* ━━━ CSV FORMAT HINT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.format-hint {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r2); padding: 1.4rem 1.8rem;
+}
+.format-hint-title {
+  font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: .8rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.format-hint-title::before { content:''; display:block; width:12px; height:1px; background:var(--cyan); }
+.csv-preview {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 8px; padding: .9rem 1.1rem;
+  font-size: .72rem; color: var(--cyan); line-height: 1.8;
+  overflow-x: auto; white-space: pre;
+}
+
+/* ━━━ RESPONSIVE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media (max-width: 900px) {
+  header { padding: 0 1.4rem; }
+  .hero  { padding: 2.5rem 1.4rem 1.5rem; }
+  .tabs-bar { padding: 0 1.4rem; }
+  .single-layout { grid-template-columns: 1fr; padding: 1.4rem; }
+  .csv-layout { padding: 1.4rem; }
+  .input-grid { grid-template-columns: 1fr; }
+  .stats-row  { grid-template-columns: 1fr 1fr; }
+  .result-col { position: static; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────── -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Churn<span>Sense</span></div>
+  </div>
+  <div class="badge-live" id="statusBadge">
+    <div class="pulse"></div>
+    <span id="statusText">Connecting…</span>
+  </div>
+</header>
+
+<!-- ── HERO ───────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-kicker">⚡ Powered by your ML model</div>
+  <h1>Predict customer<br><span class="hl">churn in real time.</span></h1>
+  <p>Run predictions on individual customers or upload a full CSV dataset to analyse churn risk across your entire base.</p>
+</div>
+
+<!-- ── TABS ───────────────────────────────────────────────── -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('single', this)">Single Customer</button>
+  <button class="tab-btn" onclick="switchTab('bulk', this)">Bulk CSV Upload</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 1: SINGLE PREDICT
+════════════════════════════════════════════════════════════ -->
+<div class="tab-section active" id="tab-single">
+<div class="single-layout">
+
+  <!-- Input card -->
+  <div class="card">
+    <div class="section-label">Customer Feature Input</div>
+    <div class="input-grid">
+
+      <div class="field">
+        <label>Day Minutes <span class="unit">min</span></label>
+        <input type="number" id="DayMins" placeholder="e.g. 245.5" step="0.1" min="0">
+        <div class="hint">Total daytime call minutes</div>
+      </div>
+
+      <div class="field">
+        <label>Monthly Charge <span class="unit">$</span></label>
+        <input type="number" id="MonthlyCharge" placeholder="e.g. 65.40" step="0.01" min="0">
+        <div class="hint">Customer's monthly bill</div>
+      </div>
+
+      <div class="field">
+        <label>Customer Service Calls</label>
+        <input type="number" id="CustServCalls" placeholder="e.g. 3" step="1" min="0">
+        <div class="hint">Number of CS calls made</div>
+      </div>
+
+      <div class="field">
+        <label>Overage Fee <span class="unit">$</span></label>
+        <input type="number" id="OverageFee" placeholder="e.g. 12.80" step="0.01" min="0">
+        <div class="hint">Extra charges beyond plan</div>
+      </div>
+
+      <div class="field">
+        <label>Roaming Minutes <span class="unit">min</span></label>
+        <input type="number" id="RoamMins" placeholder="e.g. 14.2" step="0.1" min="0">
+        <div class="hint">Minutes used while roaming</div>
+      </div>
+
+      <div class="field">
+        <label>Contract Renewal</label>
+        <div class="toggle-row" id="contractToggle" onclick="toggleContract()">
+          <span class="toggle-row-label" id="contractLabel">Has not renewed</span>
+          <div class="toggle-pill"></div>
+        </div>
+        <div class="hint">Whether customer renewed contract</div>
+      </div>
+
+    </div>
+
+    <button class="btn-predict" id="predictBtn" onclick="runSinglePredict()">
+      <span class="btn-text">⚡ Run Prediction</span>
+      <div class="spin"></div>
+    </button>
+  </div>
+
+  <!-- Result column -->
+  <div class="result-col">
+
+    <div class="verdict-card" id="verdictCard">
+      <div class="glow"></div>
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        <p>Fill in the customer details<br>and hit <strong>Run Prediction</strong></p>
+      </div>
+    </div>
+
+    <div class="card prob-section" id="probCard" style="display:none">
+      <div class="section-label">Probability Breakdown</div>
+      <div class="prob-row">
+        <div class="prob-head">
+          <span style="color:var(--text2)">Churn Probability</span>
+          <span id="churnPct" style="color:var(--red)">—</span>
+        </div>
+        <div class="prob-track"><div class="prob-fill c" id="churnBar"></div></div>
+      </div>
+      <div class="prob-row">
+        <div class="prob-head">
+          <span style="color:var(--text2)">Retention Probability</span>
+          <span id="stayPct" style="color:var(--green)">—</span>
+        </div>
+        <div class="prob-track"><div class="prob-fill s" id="stayBar"></div></div>
+      </div>
+    </div>
+
+    <div class="card" id="featCard" style="display:none">
+      <div class="section-label">Input Summary</div>
+      <div class="feat-list" id="featList"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 2: BULK CSV
+════════════════════════════════════════════════════════════ -->
+<div class="tab-section" id="tab-bulk">
+<div class="csv-layout">
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone"
+       ondragover="dzOver(event)" ondragleave="dzLeave()" ondrop="dzDrop(event)"
+       onclick="document.getElementById('csvInput').click()">
+    <div class="dz-icon">📂</div>
+    <div class="dz-title">Drop your CSV file here</div>
+    <div class="dz-sub">or <span>click to browse</span> · CSV only · columns must match</div>
+    <input type="file" id="csvInput" class="dz-hidden" accept=".csv" onchange="fileSelected(this)">
+  </div>
+
+  <div class="file-pill" id="filePill">
+    <span>📄</span>
+    <span class="file-pill-name" id="pillName"></span>
+    <button class="file-pill-remove" onclick="clearFile()">✕</button>
+  </div>
+
+  <button class="btn-csv" id="csvBtn" onclick="runBulkPredict()" disabled>
+    <span class="btn-label">🚀 Analyse CSV</span>
+    <div class="spin"></div>
+  </button>
+
+  <!-- Stats summary -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-box lime">
+      <div class="stat-label">Total Customers</div>
+      <div class="stat-value" id="sTotal">—</div>
+      <div class="stat-sub">rows processed</div>
+    </div>
+    <div class="stat-box red">
+      <div class="stat-label">Will Churn</div>
+      <div class="stat-value" id="sChurned">—</div>
+      <div class="stat-sub" id="sChurnPct">avg risk —%</div>
+    </div>
+    <div class="stat-box green">
+      <div class="stat-label">Will Stay</div>
+      <div class="stat-value" id="sStaying">—</div>
+      <div class="stat-sub">retained customers</div>
+    </div>
+    <div class="stat-box cyan">
+      <div class="stat-label">Risk Distribution</div>
+      <div class="risk-bars">
+        <div class="risk-bar-item rb-high" id="rbHigh" style="height:4px"></div>
+        <div class="risk-bar-item rb-mid"  id="rbMid"  style="height:4px"></div>
+        <div class="risk-bar-item rb-low"  id="rbLow"  style="height:4px"></div>
+      </div>
+      <div class="stat-sub" id="sRiskSub">high · mid · low</div>
+    </div>
+  </div>
+
+  <!-- Results table -->
+  <div class="table-wrap" id="tableWrap">
+    <div class="table-header">
+      <div>
+        <div class="table-title">Prediction Results</div>
+        <div class="table-count" id="tblCount"></div>
+      </div>
+      <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-row">#</th>
+            <th class="col-num">DayMins</th>
+            <th class="col-num">MthlyCharge</th>
+            <th class="col-num">CSCalls</th>
+            <th class="col-num">OverageFee</th>
+            <th class="col-num">RoamMins</th>
+            <th class="col-num">Contract</th>
+            <th class="col-label">Result</th>
+            <th class="col-prob">Churn Prob</th>
+            <th class="col-risk">Risk</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Format hint -->
+  <div class="format-hint">
+    <div class="format-hint-title">Expected CSV Format</div>
+    <div class="csv-preview">DayMins,MonthlyCharge,CustServCalls,OverageFee,RoamMins,ContractRenewal
+245.5,65.40,3,12.80,14.2,0
+180.0,45.00,1,5.50,0.0,1
+312.8,89.90,6,22.10,28.5,0</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ── TOAST ───────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ━━━ SCRIPTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<script>
+const API = 'http://127.0.0.1:5000';
+let contractVal = 0;
+let csvFile     = null;
+let lastResults = [];
+
+/* ── health ─────────────────────────────────────────────── */
+async function checkHealth() {
+  const badge = document.getElementById('statusBadge');
+  const text  = document.getElementById('statusText');
+  try {
+    const r = await fetch(`${API}/api/health`);
+    const d = await r.json();
+    if (d.model_loaded) {
+      badge.classList.remove('offline');
+      text.textContent = 'Model Ready';
+    } else {
+      badge.classList.add('offline');
+      text.textContent = 'Model Not Loaded';
+    }
+  } catch {
+    badge.classList.add('offline');
+    text.textContent = 'Server Offline';
+  }
+}
+checkHealth();
+
+/* ── tabs ───────────────────────────────────────────────── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── toggle ─────────────────────────────────────────────── */
+function toggleContract() {
+  contractVal = contractVal === 0 ? 1 : 0;
+  const row = document.getElementById('contractToggle');
+  const lbl = document.getElementById('contractLabel');
+  row.classList.toggle('on', contractVal === 1);
+  lbl.textContent = contractVal === 1 ? 'Has renewed contract' : 'Has not renewed';
+}
+
+/* ── toast ───────────────────────────────────────────────── */
+function toast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = isErr ? 'err' : '';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ── validate inputs ─────────────────────────────────────── */
+function getInputs() {
+  const keys = ['DayMins','MonthlyCharge','CustServCalls','OverageFee','RoamMins'];
+  const data = {}; let ok = true;
+  keys.forEach(k => {
+    const el = document.getElementById(k);
+    el.classList.remove('error');
+    if (el.value.trim() === '' || isNaN(+el.value)) { el.classList.add('error'); ok = false; }
+    else data[k] = +el.value;
+  });
+  data['ContractRenewal'] = contractVal;
+  return ok ? data : null;
+}
+
+/* ── single predict ──────────────────────────────────────── */
+async function runSinglePredict() {
+  const data = getInputs();
+  if (!data) { toast('⚠ Please fill all fields correctly', true); return; }
+  const btn = document.getElementById('predictBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/api/predict`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const r = await res.json();
+    if (!res.ok) { toast(r.error || 'Server error', true); return; }
+    renderVerdict(r);
+  } catch { toast('❌ Cannot reach server. Is Flask running?', true); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+/* ── render single result ────────────────────────────────── */
+function renderVerdict(r) {
+  const isChurn = r.prediction === 1;
+  const vc = document.getElementById('verdictCard');
+  vc.className = 'verdict-card ' + (isChurn ? 'churn' : 'stay');
+  vc.innerHTML = `
+    <div class="glow"></div>
+    <div class="v-emoji">${isChurn ? '⚠️' : '✅'}</div>
+    <div class="v-label">${isChurn ? 'Will Churn' : 'Will Stay'}</div>
+    <div class="v-chip">${r.risk}</div>`;
+
+  document.getElementById('probCard').style.display = '';
+  document.getElementById('churnPct').textContent = r.churn_prob + '%';
+  document.getElementById('stayPct').textContent  = r.stay_prob  + '%';
+  setTimeout(() => {
+    document.getElementById('churnBar').style.width = r.churn_prob + '%';
+    document.getElementById('stayBar').style.width  = r.stay_prob  + '%';
+  }, 60);
+
+  const labels = { DayMins:'Day Minutes', MonthlyCharge:'Monthly Charge', CustServCalls:'CS Calls',
+                   OverageFee:'Overage Fee', RoamMins:'Roam Minutes', ContractRenewal:'Contract Renewed' };
+  const units  = { DayMins:' min', MonthlyCharge:' $', CustServCalls:'', OverageFee:' $', RoamMins:' min', ContractRenewal:'' };
+  document.getElementById('featCard').style.display = '';
+  document.getElementById('featList').innerHTML =
+    Object.entries(r.features).map(([k,v]) => `
+      <div class="feat-row">
+        <span class="feat-k">${labels[k]||k}</span>
+        <span class="feat-v">${k==='ContractRenewal'?(v?'Yes':'No'):v}${units[k]}</span>
+      </div>`).join('');
+}
+
+/* ── drag & drop ─────────────────────────────────────────── */
+function dzOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('over'); }
+function dzLeave()  { document.getElementById('dropzone').classList.remove('over'); }
+function dzDrop(e) {
+  e.preventDefault(); dzLeave();
+  const f = e.dataTransfer.files[0];
+  if (f) loadFile(f);
+}
+function fileSelected(input) { if (input.files[0]) loadFile(input.files[0]); }
+
+function loadFile(f) {
+  if (!f.name.toLowerCase().endsWith('.csv')) { toast('Only CSV files supported', true); return; }
+  csvFile = f;
+  const pill = document.getElementById('filePill');
+  document.getElementById('pillName').textContent = f.name + ` (${(f.size/1024).toFixed(1)} KB)`;
+  pill.classList.add('show');
+  document.getElementById('csvBtn').disabled = false;
+}
+
+function clearFile() {
+  csvFile = null;
+  document.getElementById('filePill').classList.remove('show');
+  document.getElementById('csvInput').value = '';
+  document.getElementById('csvBtn').disabled = true;
+}
+
+/* ── bulk predict ────────────────────────────────────────── */
+async function runBulkPredict() {
+  if (!csvFile) { toast('Please select a CSV file first', true); return; }
+  const btn = document.getElementById('csvBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  const fd = new FormData();
+  fd.append('file', csvFile);
+
+  try {
+    const res = await fetch(`${API}/api/predict_csv`, { method: 'POST', body: fd });
+    const r   = await res.json();
+    if (!res.ok) { toast(r.error || 'Server error', true); return; }
+    lastResults = r.results;
+    renderBulk(r);
+    toast(`✅ ${r.total} customers analysed`);
+  } catch { toast('❌ Cannot reach server. Is Flask running?', true); }
+  finally { btn.classList.remove('loading'); btn.disabled = false; }
+}
+
+/* ── render bulk ─────────────────────────────────────────── */
+function renderBulk(r) {
+  // Stats
+  document.getElementById('statsRow').classList.add('show');
+  document.getElementById('sTotal').textContent   = r.total;
+  document.getElementById('sChurned').textContent = r.churned;
+  document.getElementById('sStaying').textContent = r.staying;
+  document.getElementById('sChurnPct').textContent = `avg risk ${r.avg_churn_prob}%`;
+  document.getElementById('sRiskSub').textContent  = `${r.high_risk} high · ${r.med_risk} mid · ${r.low_risk} low`;
+
+  // risk bars (proportional heights)
+  const mx = Math.max(r.high_risk, r.med_risk, r.low_risk, 1);
+  document.getElementById('rbHigh').style.height = Math.max(4, (r.high_risk/mx)*28) + 'px';
+  document.getElementById('rbMid').style.height  = Math.max(4, (r.med_risk /mx)*28) + 'px';
+  document.getElementById('rbLow').style.height  = Math.max(4, (r.low_risk /mx)*28) + 'px';
+
+  // Table
+  document.getElementById('tableWrap').classList.add('show');
+  document.getElementById('tblCount').textContent = `${r.total} rows`;
+
+  const riskBadge = risk => {
+    if (risk === 'High Risk')   return `<span class="badge high">High</span>`;
+    if (risk === 'Medium Risk') return `<span class="badge med">Med</span>`;
+    return `<span class="badge low">Low</span>`;
+  };
+
+  document.getElementById('resultsTbody').innerHTML = r.results.map(row => `
+    <tr>
+      <td style="color:var(--text3)">${row.row}</td>
+      <td>${row.DayMins}</td>
+      <td>${row.MonthlyCharge}</td>
+      <td>${row.CustServCalls}</td>
+      <td>${row.OverageFee}</td>
+      <td>${row.RoamMins}</td>
+      <td>${row.ContractRenewal ? 'Yes' : 'No'}</td>
+      <td><span class="badge ${row.prediction===1?'churn':'stay'}">${row.label}</span></td>
+      <td>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar-bg">
+            <div class="mini-bar-fill ${row.prediction===1?'c':'s'}" style="width:${row.churn_prob}%"></div>
+          </div>
+          <span style="color:${row.prediction===1?'var(--red)':'var(--green)'}; min-width:38px; text-align:right">
+            ${row.churn_prob}%
+          </span>
+        </div>
+      </td>
+      <td>${riskBadge(row.risk)}</td>
+    </tr>`).join('');
+}
+
+/* ── export CSV ──────────────────────────────────────────── */
+function exportCSV() {
+  if (!lastResults.length) return;
+  const headers = ['Row','DayMins','MonthlyCharge','CustServCalls','OverageFee','RoamMins',
+                   'ContractRenewal','Prediction','ChurnProb%','StayProb%','Risk'];
+  const rows = lastResults.map(r =>
+    [r.row, r.DayMins, r.MonthlyCharge, r.CustServCalls, r.OverageFee,
+     r.RoamMins, r.ContractRenewal, r.label, r.churn_prob, r.stay_prob, r.risk].join(',')
+  );
+  const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type: 'text/csv' });
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'churn_predictions.csv' });
+  a.click();
+}
+
+/* Enter key support for single predict */
+document.addEventListener('keydown', e => { if (e.key === 'Enter') runSinglePredict(); });
+</script>
+</body>
+</html>
